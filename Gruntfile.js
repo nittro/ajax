@@ -5,7 +5,8 @@ module.exports = function (grunt) {
         'src/js/Nittro/Ajax/Request.js',
         'src/js/Nittro/Ajax/Response.js',
         'src/js/Nittro/Ajax/Service.js',
-        'src/js/Nittro/Ajax/Transport/Native.js'
+        'src/js/Nittro/Ajax/Transport/Native.js',
+        'src/js/Nittro/Ajax/Bridges/AjaxDI.js'
     ];
 
     grunt.initConfig({
