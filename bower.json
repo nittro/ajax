@@ -19,6 +19,9 @@
     "dependencies": {
         "nittro-core": "master"
     },
+    "devDependencies": {
+        "nittro-di": "master"
+    },
     "ignore": [
         "**/.*",
         "node_modules",
