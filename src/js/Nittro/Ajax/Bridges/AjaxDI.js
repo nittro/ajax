@@ -5,7 +5,7 @@ _context.invoke('Nittro.Ajax.Bridges', function(Nittro) {
     }
 
     var AjaxDI = _context.extend('Nittro.DI.BuilderExtension', function(containerBuilder, config) {
-        AjaxDI.Super.call(containerBuilder, config);
+        AjaxDI.Super.call(this, containerBuilder, config);
     }, {
         load: function() {
             var builder = this._getContainerBuilder();
