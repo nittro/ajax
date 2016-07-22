@@ -1,80 +1,6 @@
-_context.invoke('Nittro.Ajax', function(undefined) {
+_context.invoke('Nittro.Ajax', function (Nittro, Url, undefined) {
 
-    var FormData = _context.extend(function() {
-        this._dataStorage = [];
-        this._upload = false;
-
-    }, {
-        append: function(name, value) {
-            if (value === undefined || value === null) {
-                return this;
-
-            }
-
-            if (this._isFile(value)) {
-                this._upload = true;
-
-            } else if (typeof value === 'object' && 'valueOf' in value && /string|number|boolean/.test(typeof value.valueOf()) && !arguments[2]) {
-                return this.append(name, value.valueOf(), true);
-
-            } else if (!/string|number|boolean/.test(typeof value)) {
-                throw new Error('Only scalar values and File/Blob objects can be appended to FormData, ' + (typeof value) + ' given');
-
-            }
-
-            this._dataStorage.push({ name: name, value: value });
-
-            return this;
-
-        },
-
-        isUpload: function() {
-            return this._upload;
-
-        },
-
-        _isFile: function(value) {
-            return window.File !== undefined && value instanceof window.File || window.Blob !== undefined && value instanceof window.Blob;
-
-        },
-
-        mergeData: function(data) {
-            for (var i = 0; i < data.length; i++) {
-                this.append(data[i].name, data[i].value);
-
-            }
-
-            return this;
-
-        },
-
-        exportData: function(forcePlain) {
-            if (!forcePlain && this.isUpload() && window.FormData !== undefined) {
-                var fd = new window.FormData(),
-                    i;
-
-                for (i = 0; i < this._dataStorage.length; i++) {
-                    fd.append(this._dataStorage[i].name, this._dataStorage[i].value);
-
-                }
-
-                return fd;
-
-            } else {
-                return this._dataStorage.filter(function(e) {
-                    return !this._isFile(e.value);
-
-                }, this);
-
-            }
-        }
-    });
-
-    _context.register(FormData, 'FormData');
-
-});
-;
-_context.invoke('Nittro.Ajax', function (Url, FormData, undefined) {
+    var FormData = Nittro.Forms ? Nittro.Forms.FormData : null;
 
     var Request = _context.extend('Nittro.Object', function(url, method, data) {
         this._ = {
@@ -205,7 +131,7 @@ _context.invoke('Nittro.Ajax', function (Url, FormData, undefined) {
             this._.normalized = true;
 
             if (this._.method === 'GET' || this._.method === 'HEAD') {
-                this._.url.addParams(this._.data instanceof FormData ? this._.data.exportData(true) : this._.data);
+                this._.url.addParams(FormData && this._.data instanceof FormData ? this._.data.exportData(true) : this._.data);
                 this._.data = {};
 
             }
@@ -303,7 +229,9 @@ _context.invoke('Nittro.Ajax', function (Request) {
 
 });
 ;
-_context.invoke('Nittro.Ajax.Transport', function (Response, FormData, Url) {
+_context.invoke('Nittro.Ajax.Transport', function (Nittro, Response, Url) {
+
+    var FormData = Nittro.Forms ? Nittro.Forms.FormData : null;
 
     var Native = _context.extend(function() {
 
@@ -466,7 +394,7 @@ _context.invoke('Nittro.Ajax.Transport', function (Response, FormData, Url) {
         _formatData: function (request, xhr) {
             var data = request.getData();
 
-            if (data instanceof FormData) {
+            if (FormData && data instanceof FormData) {
                 data = data.exportData(request.isGet() || request.isMethod('HEAD'));
 
                 if (!(data instanceof window.FormData)) {
@@ -548,8 +476,7 @@ _context.invoke('Nittro.Ajax.Transport', function (Response, FormData, Url) {
 
 }, {
     Url: 'Utils.Url',
-    Response: 'Nittro.Ajax.Response',
-    FormData: 'Nittro.Ajax.FormData'
+    Response: 'Nittro.Ajax.Response'
 });
 ;
 _context.invoke('Nittro.Ajax.Bridges', function(Nittro) {

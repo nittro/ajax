@@ -1,4 +1,6 @@
-_context.invoke('Nittro.Ajax', function (Url, FormData, undefined) {
+_context.invoke('Nittro.Ajax', function (Nittro, Url, undefined) {
+
+    var FormData = Nittro.Forms ? Nittro.Forms.FormData : null;
 
     var Request = _context.extend('Nittro.Object', function(url, method, data) {
         this._ = {
@@ -129,7 +131,7 @@ _context.invoke('Nittro.Ajax', function (Url, FormData, undefined) {
             this._.normalized = true;
 
             if (this._.method === 'GET' || this._.method === 'HEAD') {
-                this._.url.addParams(this._.data instanceof FormData ? this._.data.exportData(true) : this._.data);
+                this._.url.addParams(FormData && this._.data instanceof FormData ? this._.data.exportData(true) : this._.data);
                 this._.data = {};
 
             }

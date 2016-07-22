@@ -1,4 +1,6 @@
-_context.invoke('Nittro.Ajax.Transport', function (Response, FormData, Url) {
+_context.invoke('Nittro.Ajax.Transport', function (Nittro, Response, Url) {
+
+    var FormData = Nittro.Forms ? Nittro.Forms.FormData : null;
 
     var Native = _context.extend(function() {
 
@@ -161,7 +163,7 @@ _context.invoke('Nittro.Ajax.Transport', function (Response, FormData, Url) {
         _formatData: function (request, xhr) {
             var data = request.getData();
 
-            if (data instanceof FormData) {
+            if (FormData && data instanceof FormData) {
                 data = data.exportData(request.isGet() || request.isMethod('HEAD'));
 
                 if (!(data instanceof window.FormData)) {
@@ -243,6 +245,5 @@ _context.invoke('Nittro.Ajax.Transport', function (Response, FormData, Url) {
 
 }, {
     Url: 'Utils.Url',
-    Response: 'Nittro.Ajax.Response',
-    FormData: 'Nittro.Ajax.FormData'
+    Response: 'Nittro.Ajax.Response'
 });
