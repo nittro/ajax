@@ -1,0 +1,15 @@
+{
+    "files": {
+        "js": [
+            "src/js/Nittro/Ajax/FormData.js",
+            "src/js/Nittro/Ajax/Request.js",
+            "src/js/Nittro/Ajax/Response.js",
+            "src/js/Nittro/Ajax/Service.js",
+            "src/js/Nittro/Ajax/Transport/Native.js",
+            "src/js/Nittro/Ajax/Bridges/AjaxDI.js"
+        ]
+    },
+    "compat": {
+        "es5": true
+    }
+}

@@ -1,13 +1,6 @@
 module.exports = function (grunt) {
 
-    var files = [
-        'src/js/Nittro/Ajax/FormData.js',
-        'src/js/Nittro/Ajax/Request.js',
-        'src/js/Nittro/Ajax/Response.js',
-        'src/js/Nittro/Ajax/Service.js',
-        'src/js/Nittro/Ajax/Transport/Native.js',
-        'src/js/Nittro/Ajax/Bridges/AjaxDI.js'
-    ];
+    var files = grunt.file.readJSON('nittro.json').files;
 
     grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
@@ -19,7 +12,7 @@ module.exports = function (grunt) {
             },
             nittro: {
                 files: {
-                    'dist/js/nittro-ajax.min.js': files
+                    'dist/js/nittro-ajax.min.js': files.js
                 }
             }
         },
@@ -30,13 +23,13 @@ module.exports = function (grunt) {
             },
             nittro: {
                 files: {
-                    'dist/js/nittro-ajax.js': files
+                    'dist/js/nittro-ajax.js': files.js
                 }
             }
         },
 
         jasmine: {
-            src: files,
+            src: files.js,
             options: {
                 vendor: [
                     'bower_components/promiz/promiz.min.js',
