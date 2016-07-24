@@ -8,6 +8,7 @@
             "src/js/Nittro/Ajax/Bridges/AjaxDI.js"
         ]
     },
+    "di": "Nittro.Ajax.Bridges.AjaxDI()",
     "compat": {
         "es5": true
     }
