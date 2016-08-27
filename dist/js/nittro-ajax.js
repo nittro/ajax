@@ -9,6 +9,8 @@ _context.invoke('Nittro.Ajax', function (Nittro, Url, undefined) {
             data: data || {},
             headers: {},
             normalized: false,
+            promise: null,
+            abort: null,
             aborted: false
         };
     }, {
@@ -106,13 +108,40 @@ _context.invoke('Nittro.Ajax', function (Nittro, Url, undefined) {
 
         },
 
-        abort: function () {
-            if (!this._.aborted) {
-                this._.aborted = true;
-                this.trigger('abort');
+        setDispatched: function(promise, abort) {
+            if (!(promise instanceof Promise)) {
+                throw new Error('"promise" must be an instance of Promise');
 
             }
 
+            if (typeof abort !== 'function') {
+                throw new Error('"abort" must be a function');
+
+            }
+
+            this._.promise = promise;
+            this._.abort = abort;
+            return this;
+
+        },
+
+        isDispatched: function () {
+            return !!this._.promise;
+
+        },
+
+        then: function (onfulfilled, onrejected) {
+            return this._.promise.then(onfulfilled, onrejected);
+
+        },
+
+        abort: function () {
+            if (this._.abort && !this._.aborted) {
+                this._.abort();
+
+            }
+
+            this._.aborted = true;
             return this;
 
         },
@@ -256,36 +285,28 @@ _context.invoke('Nittro.Ajax.Transport', function (Nittro, Response, Url) {
         dispatch: function (request) {
             var xhr = Native.createXhr(),
                 adv = this.checkSupport(xhr),
-                self = this;
+                abort = xhr.abort.bind(xhr);
 
-            var abort = function () {
-                xhr.abort();
-
-            };
-
-            var cleanup = function () {
-                request.off('abort', abort);
-
-            };
-
-            request.on('abort', abort);
-
-            return new Promise(function (fulfill, reject) {
+            var promise = new Promise(function (fulfill, reject) {
                 if (request.isAborted()) {
-                    cleanup();
-                    reject(self._createError(xhr, {type: 'abort'}));
+                    reject(this._createError(xhr, {type: 'abort'}));
 
                 }
 
-                self._bindEvents(request, xhr, adv, cleanup, fulfill, reject);
+                this._bindEvents(request, xhr, adv, fulfill, reject);
 
                 xhr.open(request.getMethod(), request.getUrl().toAbsolute(), true);
 
-                var data = self._formatData(request, xhr);
-                self._addHeaders(request, xhr);
+                var data = this._formatData(request, xhr);
+                this._addHeaders(request, xhr);
                 xhr.send(data);
 
-            });
+            }.bind(this));
+
+            request.setDispatched(promise, abort);
+
+            return promise;
+
         },
 
         checkSupport: function (xhr) {
@@ -300,40 +321,31 @@ _context.invoke('Nittro.Ajax.Transport', function (Nittro, Response, Url) {
 
         },
 
-        _bindEvents: function (request, xhr, adv, cleanup, fulfill, reject) {
+        _bindEvents: function (request, xhr, adv, fulfill, reject) {
             var self = this;
 
-            var onLoad = function (evt) {
-                cleanup();
-
+            function onLoad(evt) {
                 if (xhr.status >= 200 && xhr.status < 300) {
-                    var response = self._createResponse(xhr);
-                    request.trigger('success', response);
-                    fulfill(response);
+                    fulfill(self._createResponse(xhr));
 
                 } else {
-                    var err = self._createError(xhr, evt);
-                    request.trigger('error', err);
-                    reject(err);
+                    reject(self._createError(xhr, evt));
 
                 }
-            };
+            }
 
-            var onError = function (evt) {
-                cleanup();
-                var err = self._createError(xhr, evt);
-                request.trigger('error', err);
-                reject(err);
+            function onError(evt) {
+                reject(self._createError(xhr, evt));
 
-            };
+            }
 
-            var onProgress = function (evt) {
+            function onProgress(evt) {
                 request.trigger('progress', {
                     lengthComputable: evt.lengthComputable,
                     loaded: evt.loaded,
                     total: evt.total
                 });
-            };
+            }
 
             if (adv) {
                 xhr.addEventListener('load', onLoad, false);

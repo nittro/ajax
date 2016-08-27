@@ -9,6 +9,8 @@ _context.invoke('Nittro.Ajax', function (Nittro, Url, undefined) {
             data: data || {},
             headers: {},
             normalized: false,
+            promise: null,
+            abort: null,
             aborted: false
         };
     }, {
@@ -106,13 +108,40 @@ _context.invoke('Nittro.Ajax', function (Nittro, Url, undefined) {
 
         },
 
-        abort: function () {
-            if (!this._.aborted) {
-                this._.aborted = true;
-                this.trigger('abort');
+        setDispatched: function(promise, abort) {
+            if (!(promise instanceof Promise)) {
+                throw new Error('"promise" must be an instance of Promise');
 
             }
 
+            if (typeof abort !== 'function') {
+                throw new Error('"abort" must be a function');
+
+            }
+
+            this._.promise = promise;
+            this._.abort = abort;
+            return this;
+
+        },
+
+        isDispatched: function () {
+            return !!this._.promise;
+
+        },
+
+        then: function (onfulfilled, onrejected) {
+            return this._.promise.then(onfulfilled, onrejected);
+
+        },
+
+        abort: function () {
+            if (this._.abort && !this._.aborted) {
+                this._.abort();
+
+            }
+
+            this._.aborted = true;
             return this;
 
         },
