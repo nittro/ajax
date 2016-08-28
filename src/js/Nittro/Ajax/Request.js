@@ -11,7 +11,8 @@ _context.invoke('Nittro.Ajax', function (Nittro, Url, undefined) {
             normalized: false,
             promise: null,
             abort: null,
-            aborted: false
+            aborted: false,
+            response: null
         };
     }, {
         getUrl: function () {
@@ -149,6 +150,15 @@ _context.invoke('Nittro.Ajax', function (Nittro, Url, undefined) {
         isAborted: function () {
             return this._.aborted;
 
+        },
+
+        setResponse: function(response) {
+            this._.response = response;
+            return this;
+        },
+
+        getResponse: function () {
+            return this._.response;
         },
 
         _normalize: function() {
