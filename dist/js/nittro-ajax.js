@@ -11,7 +11,8 @@ _context.invoke('Nittro.Ajax', function (Nittro, Url, undefined) {
             normalized: false,
             promise: null,
             abort: null,
-            aborted: false
+            aborted: false,
+            response: null
         };
     }, {
         getUrl: function () {
@@ -149,6 +150,15 @@ _context.invoke('Nittro.Ajax', function (Nittro, Url, undefined) {
         isAborted: function () {
             return this._.aborted;
 
+        },
+
+        setResponse: function(response) {
+            this._.response = response;
+            return this;
+        },
+
+        getResponse: function () {
+            return this._.response;
         },
 
         _normalize: function() {
@@ -289,7 +299,7 @@ _context.invoke('Nittro.Ajax.Transport', function (Nittro, Response, Url) {
 
             var promise = new Promise(function (fulfill, reject) {
                 if (request.isAborted()) {
-                    reject(this._createError(xhr, {type: 'abort'}));
+                    reject(this._createError(request, xhr, {type: 'abort'}));
 
                 }
 
@@ -322,20 +332,28 @@ _context.invoke('Nittro.Ajax.Transport', function (Nittro, Response, Url) {
         },
 
         _bindEvents: function (request, xhr, adv, fulfill, reject) {
-            var self = this;
+            var self = this,
+                done = false;
 
             function onLoad(evt) {
+                if (done) return;
+                done = true;
+
                 if (xhr.status >= 200 && xhr.status < 300) {
-                    fulfill(self._createResponse(xhr));
+                    request.setResponse(self._createResponse(xhr));
+                    fulfill(request.getResponse());
 
                 } else {
-                    reject(self._createError(xhr, evt));
+                    reject(self._createError(request, xhr, evt));
 
                 }
             }
 
             function onError(evt) {
-                reject(self._createError(xhr, evt));
+                if (done) return;
+                done = true;
+
+                reject(self._createError(request, xhr, evt));
 
             }
 
@@ -448,11 +466,9 @@ _context.invoke('Nittro.Ajax.Transport', function (Nittro, Response, Url) {
 
         },
 
-        _createError: function (xhr, evt) {
-            var response = null;
-
+        _createError: function (request, xhr, evt) {
             if (xhr.readyState === 4 && xhr.status !== 0) {
-                response = this._createResponse(xhr);
+                request.setResponse(this._createResponse(xhr));
 
             }
 
@@ -460,26 +476,26 @@ _context.invoke('Nittro.Ajax.Transport', function (Nittro, Response, Url) {
                 return {
                     type: 'abort',
                     status: null,
-                    response: response
+                    request: request
                 };
             } else if (xhr.status === 0) {
                 return {
                     type: 'connection',
                     status: null,
-                    response: response
+                    request: request
                 };
             } else if (xhr.status < 200 || xhr.status >= 300) {
                 return {
                     type: 'response',
                     status: xhr.status,
-                    response: response
+                    request: request
                 };
             }
 
             return {
                 type: 'unknown',
                 status: xhr.status,
-                response: response
+                request: request
             };
         }
     });
@@ -489,30 +505,4 @@ _context.invoke('Nittro.Ajax.Transport', function (Nittro, Response, Url) {
 }, {
     Url: 'Utils.Url',
     Response: 'Nittro.Ajax.Response'
-});
-;
-_context.invoke('Nittro.Ajax.Bridges', function(Nittro) {
-
-    if (!Nittro.DI) {
-        return;
-    }
-
-    var AjaxDI = _context.extend('Nittro.DI.BuilderExtension', function(containerBuilder, config) {
-        AjaxDI.Super.call(this, containerBuilder, config);
-    }, {
-        load: function() {
-            var builder = this._getContainerBuilder();
-
-            builder.addServiceDefinition('ajax', {
-                factory: 'Nittro.Ajax.Service()',
-                run: true,
-                setup: [
-                    '::addTransport(Nittro.Ajax.Transport.Native())'
-                ]
-            });
-        }
-    });
-
-    _context.register(AjaxDI, 'AjaxDI')
-
 });

@@ -1,11 +1,7 @@
-_context.invoke('Nittro.Ajax.Bridges', function(Nittro) {
+_context.invoke('Nittro.Ajax.Bridges.AjaxDI', function(Nittro) {
 
-    if (!Nittro.DI) {
-        return;
-    }
-
-    var AjaxDI = _context.extend('Nittro.DI.BuilderExtension', function(containerBuilder, config) {
-        AjaxDI.Super.call(this, containerBuilder, config);
+    var AjaxExtension = _context.extend('Nittro.DI.BuilderExtension', function(containerBuilder, config) {
+        AjaxExtension.Super.call(this, containerBuilder, config);
     }, {
         load: function() {
             var builder = this._getContainerBuilder();
@@ -20,6 +16,6 @@ _context.invoke('Nittro.Ajax.Bridges', function(Nittro) {
         }
     });
 
-    _context.register(AjaxDI, 'AjaxDI')
+    _context.register(AjaxExtension, 'AjaxExtension')
 
 });
