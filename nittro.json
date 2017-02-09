@@ -1,16 +1,16 @@
 {
     "files": {
         "js": [
-            "src/js/Nittro/Ajax/Request.js",
-            "src/js/Nittro/Ajax/Response.js",
-            "src/js/Nittro/Ajax/Service.js",
-            "src/js/Nittro/Ajax/Transport/Native.js"
+            "src/Request.js",
+            "src/Response.js",
+            "src/Service.js",
+            "src/Transport/Native.js"
         ]
     },
     "bridges": {
         "nittro-di": {
             "files": [
-                "src/js/Nittro/Ajax/Bridges/AjaxDI/AjaxExtension.js"
+                "src/Bridges/AjaxDI/AjaxExtension.js"
             ],
             "extensions": {
                 "ajax": "Nittro.Ajax.Bridges.AjaxDI.AjaxExtension()"
