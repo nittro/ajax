@@ -10,5 +10,10 @@
         "type": "git",
         "url": "https://github.com/nittro/ajax.git"
     },
-    "devDependencies": {}
+    "dependencies": {
+        "nittro-core": "master"
+    },
+    "devDependencies": {
+        "nittro-di": "master"
+    }
 }
