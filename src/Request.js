@@ -9,11 +9,20 @@ _context.invoke('Nittro.Ajax', function (Nittro, Url, undefined) {
             data: data || {},
             headers: {},
             normalized: false,
-            promise: null,
+            promise: {
+                fulfill: null,
+                reject: null,
+                wrapper: null
+            },
             abort: null,
             aborted: false,
             response: null
         };
+
+        this._.promise.wrapper = new Promise(function (fulfill, reject) {
+            this._.promise.fulfill = fulfill;
+            this._.promise.reject = reject;
+        }.bind(this));
     }, {
         getUrl: function () {
             this._normalize();
@@ -120,7 +129,7 @@ _context.invoke('Nittro.Ajax', function (Nittro, Url, undefined) {
 
             }
 
-            this._.promise = promise;
+            promise.then(this._.promise.fulfill, this._.promise.reject);
             this._.abort = abort;
             return this;
 
@@ -132,7 +141,7 @@ _context.invoke('Nittro.Ajax', function (Nittro, Url, undefined) {
         },
 
         then: function (onfulfilled, onrejected) {
-            return this._.promise.then(onfulfilled, onrejected);
+            return this._.promise.wrapper.then(onfulfilled, onrejected);
 
         },
 
