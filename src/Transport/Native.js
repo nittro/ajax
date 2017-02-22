@@ -1,7 +1,5 @@
 _context.invoke('Nittro.Ajax.Transport', function (Nittro, Response, Url) {
 
-    var FormData = Nittro.Forms ? Nittro.Forms.FormData : null;
-
     var Native = _context.extend(function() {
 
     }, {
@@ -154,7 +152,7 @@ _context.invoke('Nittro.Ajax.Transport', function (Nittro, Response, Url) {
         _formatData: function (request, xhr) {
             var data = request.getData();
 
-            if (FormData && data instanceof FormData) {
+            if (Nittro.Forms && data instanceof Nittro.Forms.FormData) {
                 data = data.exportData(request.isGet() || request.isMethod('HEAD'));
 
                 if (!(data instanceof window.FormData)) {
