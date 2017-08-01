@@ -7,70 +7,62 @@ _context.invoke('Nittro.Ajax', function (Nittro, Url, undefined) {
             data: data || {},
             headers: {},
             normalized: false,
-            promise: {
+            dispatched: false,
+            deferred: {
                 fulfill: null,
                 reject: null,
-                wrapper: null
+                promise: null
             },
             abort: null,
             aborted: false,
             response: null
         };
 
-        this._.promise.wrapper = new Promise(function (fulfill, reject) {
-            this._.promise.fulfill = fulfill;
-            this._.promise.reject = reject;
+        this._.deferred.promise = new Promise(function (fulfill, reject) {
+            this._.deferred.fulfill = fulfill;
+            this._.deferred.reject = reject;
         }.bind(this));
     }, {
         getUrl: function () {
             this._normalize();
             return this._.url;
-
         },
 
         getMethod: function () {
             return this._.method;
-
         },
 
         isGet: function () {
             return this._.method === 'GET';
-
         },
 
         isPost: function () {
             return this._.method === 'POST';
-
         },
 
         isMethod: function (method) {
             return method.toUpperCase() === this._.method;
-
         },
 
         getData: function () {
             this._normalize();
             return this._.data;
-
         },
 
         getHeaders: function () {
             return this._.headers;
-
         },
 
         setUrl: function (url) {
             this._updating('url');
             this._.url = Url.from(url);
             return this;
-
         },
 
         setMethod: function (method) {
             this._updating('method');
             this._.method = method.toLowerCase();
             return this;
-
         },
 
         setData: function (k, v) {
@@ -92,14 +84,12 @@ _context.invoke('Nittro.Ajax', function (Nittro, Url, undefined) {
             }
 
             return this;
-
         },
 
         setHeader: function (header, value) {
             this._updating('headers');
             this._.headers[header] = value;
             return this;
-
         },
 
         setHeaders: function (headers) {
@@ -113,40 +103,45 @@ _context.invoke('Nittro.Ajax', function (Nittro, Url, undefined) {
             }
 
             return this;
-
         },
 
-        setDispatched: function(promise, abort) {
-            if (!(promise instanceof Promise)) {
-                throw new Error('"promise" must be an instance of Promise');
-
-            }
-
-            if (typeof abort !== 'function') {
+        setDispatched: function(abort) {
+            if (this._.dispatched) {
+                throw new Error('Request has already been dispatched');
+            } else if (typeof abort !== 'function') {
                 throw new Error('"abort" must be a function');
-
             }
 
-            promise.then(this._.promise.fulfill, this._.promise.reject);
+            this._.dispatched = true;
             this._.abort = abort;
             return this;
-
         },
 
         isDispatched: function () {
-            return !!this._.promise;
+            return this._.dispatched;
+        },
 
+        setFulfilled: function (response) {
+            if (response) {
+                this.setResponse(response);
+            }
+
+            this._.deferred.fulfill(this.getResponse());
+            return this;
+        },
+
+        setRejected: function (reason) {
+            this._.deferred.reject(reason);
+            return this;
         },
 
         then: function (onfulfilled, onrejected) {
-            return this._.promise.wrapper.then(onfulfilled, onrejected);
-
+            return this._.deferred.promise.then(onfulfilled, onrejected);
         },
 
         abort: function () {
             if (this._.abort && !this._.aborted) {
                 this._.abort();
-
             }
 
             this._.aborted = true;
@@ -156,7 +151,6 @@ _context.invoke('Nittro.Ajax', function (Nittro, Url, undefined) {
 
         isAborted: function () {
             return this._.aborted;
-
         },
 
         setResponse: function(response) {
@@ -171,7 +165,6 @@ _context.invoke('Nittro.Ajax', function (Nittro, Url, undefined) {
         _normalize: function() {
             if (this._.normalized || !this.isFrozen()) {
                 return;
-
             }
 
             this._.normalized = true;
@@ -179,7 +172,6 @@ _context.invoke('Nittro.Ajax', function (Nittro, Url, undefined) {
             if (this._.method === 'GET' || this._.method === 'HEAD') {
                 this._.url.addParams(Nittro.Forms && Nittro.Forms.FormData && this._.data instanceof Nittro.Forms.FormData ? this._.data.exportData(true) : this._.data);
                 this._.data = {};
-
             }
         }
     });

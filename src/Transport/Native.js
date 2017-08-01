@@ -25,25 +25,21 @@ _context.invoke('Nittro.Ajax.Transport', function (Nittro, Response, Url) {
                 adv = this.checkSupport(xhr),
                 abort = xhr.abort.bind(xhr);
 
-            var promise = new Promise(function (fulfill, reject) {
-                if (request.isAborted()) {
-                    reject(this._createError(request, xhr, {type: 'abort'}));
+            if (request.isAborted()) {
+                request.setRejected(this._createError(request, xhr, {type: 'abort'}));
+            }
 
-                }
+            this._bindEvents(request, xhr, adv);
 
-                this._bindEvents(request, xhr, adv, fulfill, reject);
+            xhr.open(request.getMethod(), request.getUrl().toAbsolute(), true);
 
-                xhr.open(request.getMethod(), request.getUrl().toAbsolute(), true);
+            var data = this._formatData(request, xhr);
+            this._addHeaders(request, xhr);
+            xhr.send(data);
 
-                var data = this._formatData(request, xhr);
-                this._addHeaders(request, xhr);
-                xhr.send(data);
+            request.setDispatched(abort);
 
-            }.bind(this));
-
-            request.setDispatched(promise, abort);
-
-            return promise;
+            return request;
 
         },
 
@@ -52,14 +48,13 @@ _context.invoke('Nittro.Ajax.Transport', function (Nittro, Response, Url) {
 
             if (!(adv = 'addEventListener' in xhr) && !('onreadystatechange' in xhr)) {
                 throw new Error('Unsupported XHR implementation');
-
             }
 
             return adv;
 
         },
 
-        _bindEvents: function (request, xhr, adv, fulfill, reject) {
+        _bindEvents: function (request, xhr, adv) {
             var self = this,
                 done = false;
 
@@ -68,12 +63,9 @@ _context.invoke('Nittro.Ajax.Transport', function (Nittro, Response, Url) {
                 done = true;
 
                 if (xhr.status >= 200 && xhr.status < 300) {
-                    request.setResponse(self._createResponse(xhr));
-                    fulfill(request.getResponse());
-
+                    request.setFulfilled(self._createResponse(xhr));
                 } else {
-                    reject(self._createError(request, xhr, evt));
-
+                    request.setRejected(self._createError(request, xhr, evt));
                 }
             }
 
@@ -81,8 +73,7 @@ _context.invoke('Nittro.Ajax.Transport', function (Nittro, Response, Url) {
                 if (done) return;
                 done = true;
 
-                reject(self._createError(request, xhr, evt));
-
+                request.setRejected(self._createError(request, xhr, evt));
             }
 
             function onProgress(evt) {
@@ -100,34 +91,28 @@ _context.invoke('Nittro.Ajax.Transport', function (Nittro, Response, Url) {
 
                 if ('upload' in xhr) {
                     xhr.upload.addEventListener('progress', onProgress, false);
-
                 }
             } else {
                 xhr.onreadystatechange = function () {
                     if (xhr.readyState === 4) {
                         if (xhr.status >= 200 && xhr.status < 300) {
                             onLoad();
-
                         } else {
                             onError();
-
                         }
                     }
                 };
 
                 if ('ontimeout' in xhr) {
                     xhr.ontimeout = onError;
-
                 }
 
                 if ('onerror' in xhr) {
                     xhr.onerror = onError;
-
                 }
 
                 if ('onload' in xhr) {
                     xhr.onload = onLoad;
-
                 }
             }
         },
@@ -139,13 +124,11 @@ _context.invoke('Nittro.Ajax.Transport', function (Nittro, Response, Url) {
             for (h in headers) {
                 if (headers.hasOwnProperty(h)) {
                     xhr.setRequestHeader(h, headers[h]);
-
                 }
             }
 
             if (!headers.hasOwnProperty('X-Requested-With')) {
                 xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-
             }
         },
 
@@ -158,16 +141,13 @@ _context.invoke('Nittro.Ajax.Transport', function (Nittro, Response, Url) {
                 if (!(data instanceof window.FormData)) {
                     data = Url.buildQuery(data, true);
                     xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-
                 }
             } else {
                 data = Url.buildQuery(data);
                 xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-
             }
 
             return data;
-
         },
 
         _createResponse: function (xhr) {
@@ -175,29 +155,24 @@ _context.invoke('Nittro.Ajax.Transport', function (Nittro, Response, Url) {
                 headers = {};
 
             (xhr.getAllResponseHeaders() || '').trim().split(/\r\n/g).forEach(function(header) {
-                if (header && !header.match(/^\s+$/)) {
-                    header = header.match(/^\s*([^:]+):\s*(.+)\s*$/);
+                if (header && !header.match(/^\s*$/)) {
+                    header = header.match(/^\s*([^:]+):\s*(.+?)\s*$/);
                     headers[header[1].toLowerCase()] = header[2];
-
                 }
             });
 
             if (headers['content-type'] && headers['content-type'].split(/;/)[0] === 'application/json') {
                 payload = JSON.parse(xhr.responseText || '{}');
-
             } else {
                 payload = xhr.responseText;
-
             }
 
             return new Response(xhr.status, payload, headers);
-
         },
 
         _createError: function (request, xhr, evt) {
             if (xhr.readyState === 4 && xhr.status !== 0) {
                 request.setResponse(this._createResponse(xhr));
-
             }
 
             if (evt && evt.type === 'abort') {

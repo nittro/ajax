@@ -36,11 +36,11 @@ _context.invoke('Nittro.Ajax', function (Request) {
                 try {
                     return this._.transports[i].dispatch(request);
 
-                } catch (e) { console.log(e); }
+                } catch (e) { }
             }
 
-            throw new Error('No transport is able to dispatch this request');
-
+            request.setRejected(new Error('No transport is able to dispatch this request'));
+            return request;
         }
     });
 
