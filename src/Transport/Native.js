@@ -22,11 +22,12 @@ _context.invoke('Nittro.Ajax.Transport', function (Nittro, Response, Url) {
 
         dispatch: function (request) {
             var xhr = Native.createXhr(),
-                adv = this.checkSupport(xhr),
+                adv = this._checkSupport(request, xhr),
                 abort = xhr.abort.bind(xhr);
 
             if (request.isAborted()) {
                 request.setRejected(this._createError(request, xhr, {type: 'abort'}));
+                return request;
             }
 
             this._bindEvents(request, xhr, adv);
@@ -43,7 +44,11 @@ _context.invoke('Nittro.Ajax.Transport', function (Nittro, Response, Url) {
 
         },
 
-        checkSupport: function (xhr) {
+        _checkSupport: function (request, xhr) {
+            if (Nittro.Forms && request.getData() instanceof Nittro.Forms.FormData && request.getData().isUpload() && !window.FormData) {
+                throw new Error('XHR File uploads are not supported in this browser');
+            }
+
             var adv;
 
             if (!(adv = 'addEventListener' in xhr) && !('onreadystatechange' in xhr)) {
@@ -138,7 +143,7 @@ _context.invoke('Nittro.Ajax.Transport', function (Nittro, Response, Url) {
             if (Nittro.Forms && data instanceof Nittro.Forms.FormData) {
                 data = data.exportData(request.isGet() || request.isMethod('HEAD'));
 
-                if (!(data instanceof window.FormData)) {
+                if (!window.FormData || !(data instanceof window.FormData)) {
                     data = Url.buildQuery(data, true);
                     xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
                 }
