@@ -7,17 +7,26 @@ _context.invoke('Nittro.Ajax.Transport', function (Nittro, Response, Url) {
             createXhr: function () {
                 if (window.XMLHttpRequest) {
                     return new XMLHttpRequest();
-
                 } else if (window.ActiveXObject) {
                     try {
                         return new ActiveXObject('Msxml2.XMLHTTP');
-
                     } catch (e) {
                         return new ActiveXObject('Microsoft.XMLHTTP');
-
                     }
                 }
             }
+        },
+
+        supports: function (request) {
+            if (request.getData() && Nittro.Forms && request.getData() instanceof Nittro.Forms.FormData && request.getData().isUpload() && !window.FormData) {
+                return false;
+            }
+
+            if ((!window.XMLHttpRequest || !('withCredentials' in XMLHttpRequest.prototype)) && Url.fromCurrent().compare(request.getUrl()) >= Url.PART.PORT) {
+                return false;
+            }
+
+            return true;
         },
 
         dispatch: function (request) {
@@ -45,10 +54,6 @@ _context.invoke('Nittro.Ajax.Transport', function (Nittro, Response, Url) {
         },
 
         _checkSupport: function (request, xhr) {
-            if (Nittro.Forms && request.getData() instanceof Nittro.Forms.FormData && request.getData().isUpload() && !window.FormData) {
-                throw new Error('XHR File uploads are not supported in this browser');
-            }
-
             var adv;
 
             if (!(adv = 'addEventListener' in xhr) && !('onreadystatechange' in xhr)) {

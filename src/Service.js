@@ -3,13 +3,17 @@ _context.invoke('Nittro.Ajax', function (Request) {
     var Service = _context.extend('Nittro.Object', function () {
         Service.Super.call(this);
 
-        this._.transports = [];
+        this._.transport = null;
 
     }, {
-        addTransport: function (transport) {
-            this._.transports.push(transport);
+        setTransport: function (transport) {
+            this._.transport = transport;
             return this;
+        },
 
+        addTransport: function (transport) {
+            console.log('The Nittro.Ajax.Service.addTransport() method is deprecated, please use setTransport instead');
+            return this.setTransport(transport);
         },
 
         'get': function (url, data) {
@@ -24,23 +28,18 @@ _context.invoke('Nittro.Ajax', function (Request) {
 
         createRequest: function (url, method, data) {
             var request = new Request(url, method, data);
+
+            if (!this._.transport.supports(request)) {
+                throw new Error('Cannot send this request using the current transport');
+            }
+
             this.trigger('request-created', {request: request});
             return request;
-
         },
 
         dispatch: function (request) {
             request.freeze();
-
-            for (var i = 0; i < this._.transports.length; i++) {
-                try {
-                    return this._.transports[i].dispatch(request);
-
-                } catch (e) { }
-            }
-
-            request.setRejected(new Error('No transport is able to dispatch this request'));
-            return request;
+            return this._.transport.dispatch(request);
         }
     });
 
