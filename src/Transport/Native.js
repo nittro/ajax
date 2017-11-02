@@ -17,12 +17,12 @@ _context.invoke('Nittro.Ajax.Transport', function (Nittro, Response, Url) {
             }
         },
 
-        supports: function (request) {
-            if (request.getData() && Nittro.Forms && request.getData() instanceof Nittro.Forms.FormData && request.getData().isUpload() && !window.FormData) {
+        supports: function (url, method, data) {
+            if (data && Nittro.Forms && data instanceof Nittro.Forms.FormData && data.isUpload() && !window.FormData) {
                 return false;
             }
 
-            if ((!window.XMLHttpRequest || !('withCredentials' in XMLHttpRequest.prototype)) && Url.fromCurrent().compare(request.getUrl()) >= Url.PART.PORT) {
+            if ((!window.XMLHttpRequest || !('withCredentials' in XMLHttpRequest.prototype)) && Url.fromCurrent().compare(url) >= Url.PART.PORT) {
                 return false;
             }
 
